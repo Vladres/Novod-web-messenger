@@ -1,37 +1,42 @@
-import React, { useState } from 'react'
-import "./Chat.css"
+import React from 'react'
+import "../Chat.css"
 import { Avatar, IconButton } from '@material-ui/core';
 import { SearchOutlined, AttachFile, MoreVert } from '@material-ui/icons';
 import InsertEmoticonIcon from "@material-ui/icons/InsertEmoticon";
 import MicIcon from "@material-ui/icons/Mic";
-import axios from './axios'
+import axios from '../axios';
 
-function Chat({ messeges }) {
+class Chat extends React.Component {
 
-    const [input, setInput] = useState('');
-    const sendMessage = async (e) => {
+    constructor(props) {
+        super(props);
+        this.state = { input: '' };
+        this.sendMessage = this.sendMessage.bind(this);
+    }
+
+    async sendMessage(e) {
         e.preventDefault();
         await axios.post('/messeges/new', {
-            messege: input,
-            name: "Novod",
-            timestamp: "JUST now",
+            messege: this.state.input,	
+            fromName: "Novod",
+            toName: "TestName",
             recieved: true
-        }).catch((err)=>{
+        }).catch((err) => {
             console.log(err)
         })
 
-        setInput('');
+        this.setState({input : ''});
     }
 
-    return (
-        <div className="chat">
+
+    render() {
+        return <div className="chat">
 
             <div className="chat-header">
                 <Avatar />
 
                 <div className="header-info">
-                    <h3>Room name</h3>
-                    <p>Latest seen at ...</p>
+                    {this.props.contact ? <div><h3>{this.props.contact.name}</h3><p>{this.props.contact.phone}</p></div> : null}
                 </div>
 
                 <div className="chat-headerRight">
@@ -48,8 +53,8 @@ function Chat({ messeges }) {
             </div>
 
             <div className="chat-body">
-                {messeges.map((messege) => {
-                    return <p className={`chat-message ${messege.recieved && "chat-reciever"}`}>
+                {this.props.messeges && this.props.messeges.map((messege) => {
+                    return <p className={`chat-message ${messege.recieved && "chat-reciever"}`} key={messege._id}>
                         <span className="chat-name">{messege.name}</span>
                         {messege.messege}
                         <span className="chat-timestamp">
@@ -63,19 +68,18 @@ function Chat({ messeges }) {
                 <InsertEmoticonIcon />
                 <form>
                     <input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        value={this.state.input}
+                        onChange={(e) => this.setState({input : e.target.value})}
                         placeholder="Type a message..."
                         type="text"
                     />
 
-                    <button type="submit" onClick={sendMessage}>Send a message</button>
+                    <button type="submit" onClick={this.sendMessage}>Send a message</button>
                 </form>
                 <MicIcon />
             </div>
-
         </div>
-    )
+    }
 }
 
 export default Chat

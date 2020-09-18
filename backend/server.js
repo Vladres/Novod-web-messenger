@@ -1,7 +1,7 @@
 // importing
 const express = require('express');
 const mongoose = require('mongoose');
-const Messeges = require('./dbMesseges');
+const models = require('./models/model');
 const Pusher = require('pusher');
 const cors = require('cors');
 
@@ -35,43 +35,104 @@ const db = mongoose.connection;
 db.once('open', () => {
     console.log('DB is connected');
 
-    const msgCollection = db.collection('messegecontents')
+    const msgCollection = db.collection('messeges')
     const changeStream = msgCollection.watch();
 
-    changeStream.on('change',(change) => {
-        if(change.operationType === 'insert'){
+    changeStream.on('change', (change) => {
+        if (change.operationType === 'insert') {
             const messegeDetails = change.fullDocument;
-            pusher.trigger('messeges' , 'inserted', {
-                name:messegeDetails.name,
-                messege:messegeDetails.messege,
-                timestamp: messegeDetails.timestamp,
-                recieved: messegeDetails.recieved
-            })
+            pusher.trigger('messeges', 'inserted', messegeDetails)
         }
     })
 })
+
+//functions
+const createUser = (user) => {
+    return models.User.findOneAndUpdate(user, user, {
+        new: true,
+        useFindAndModify: false,
+        upsert: true, new: true, runValidators: true
+    }).then(docUser => {
+        return docUser;
+    });
+};
+
+const createContact = (userId, contact) => {
+    return models.Contact.findOneAndUpdate(contact, contact, {
+        new: true,
+        useFindAndModify: false,
+        upsert: true, new: true, runValidators: true
+    }).then(docContact => {
+        return models.User.findByIdAndUpdate(
+            userId,
+            { $addToSet: { contacts: docContact._id } },
+            { new: true, useFindAndModify: false }
+        );
+    });
+};
+
+const createMessege = (userId, messege) => {
+    return models.Messege.create(messege).then(docMessege => {
+        return models.User.findByIdAndUpdate(
+            userId,
+            { $push: { messeges: docMessege._id } },
+            { new: true, useFindAndModify: false }
+        );
+    });
+};
+
+
+
+const getUserWithPopulate = (id) => {
+    return models.User.findById(id).populate("messeges").populate("contacts");
+};
+
 
 //api routes
-app.get('/', (req, res) => res.status(200).send('hello world'))
+app.post('/api/messeges/new', async (req, res) => {
+    try {
+        let user = await createUser({
+            name: req.body.fromName
+        });
 
-app.post('/api/messeges/new', (req, res) => {
-    const dbMessege = req.body;
+        user = await createMessege(user._id, req.body);
+        user = await createContact(user._id, { name: req.body.fromName });
 
-    Messeges.create(dbMessege, (err, data) => {
-        if (err) {
-            res.status(500).send(err)
-        } else {
-            res.status(201).send(`new messege created : \n ${data}`)
-        }
-    })
+        await getUserWithPopulate(user._id).then(response => {
+            res.status(200).send(response);
+        });
+    } catch (err) {
+        console.log(err)
+        res.status(500).send(err)
+    }
 })
 
-app.get('/api/messeges/sync', (req, res) => {
-    Messeges.find((err, data) => {
+app.post('/api/user/new', async (req, res) => {
+    try {
+        let user = await createUser({
+            name: req.body.fromName,
+            phone: req.body.phone,
+            email:req.body.email
+        });
+
+        await getUserWithPopulate(user._id).then(response => {
+            res.status(200).send(response);
+        });
+    } catch (err) {
+        console.log(err)
+        res.status(500).send(err)
+    }
+})
+
+app.get('/api/messeges/sync/:name', (req, res) => {
+    models.User.findOne({ name: req.params.name }, async (err, data) => {
         if (err) {
             res.status(500).send(err)
         } else {
-            res.status(200).send(data)
+            if (data)
+                await getUserWithPopulate(data._id).then(response => {
+                    res.status(200).send(response);
+                });
         }
     })
 })

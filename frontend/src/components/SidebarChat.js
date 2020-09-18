@@ -1,20 +1,20 @@
 import React from 'react'
-import './SidebarChat.css';
+import '../SidebarChat.css';
 import { Avatar } from '@material-ui/core';
 
 
-function SidebarChat() {
-    return (
-        <div className="sidebar-chat">
+class SidebarChat extends React.Component {
+    render(){
+       return <div className="sidebar-chat">
             <Avatar />
             <div className="sidebar-chat-info">
-                <h2>Room name</h2>
+                <h2>{this.props.contact.name}</h2>
                 <p>
-                    This is a last message...
+                    {this.props.contact.phone}
                 </p>
             </div>
         </div>
-    )
+    }
 }
 
 export default SidebarChat
