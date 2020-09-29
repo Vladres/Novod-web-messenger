@@ -3,7 +3,7 @@ import Sidebar from './Sidebar';
 import Chat from './Chat';
 import Pusher from 'pusher-js'
 import axios from '../axios'
-import '../App.css';
+import '../styles/App.css';
 
 class App extends React.Component {
 
@@ -13,14 +13,6 @@ class App extends React.Component {
     this.pusher = new Pusher('bf5cef76b093dddf0b91', {
       cluster: 'eu'
     });
-  }
-
-  componentDidMount() {
-    axios.get(`/messeges/sync/${'Novod'}`)
-      .then((res) => {
-        this.setState({messeges: res.data.messeges})
-        this.setState({contacts : res.data.contacts})
-      })
 
     this.channel = this.pusher.subscribe('messeges');
     this.channel.bind('inserted', (data) => {
@@ -30,6 +22,16 @@ class App extends React.Component {
           this.setState(res.data.contacts)
         })
     })
+  }
+
+  componentDidMount() {
+    axios.get(`/messeges/sync/${'Novod'}`)
+      .then((res) => {
+        this.setState({messeges: res.data.messeges})
+        this.setState({contacts : res.data.contacts})
+      })
+
+    
   }
   
 

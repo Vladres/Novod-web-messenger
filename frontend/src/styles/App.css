@@ -9,7 +9,7 @@
 .app-body{
     display: flex;
     background-color: #ededed;
-    margin-top: -50px;
+    margin-top: -50px; 
     height: 90vh;
     width: 90%;
     margin: 5px;
@@ -19,6 +19,6 @@
 @media only screen and (max-width: 600px) {
     .app-body{
         width: 98%;
-        height: 98vh;
+        height: 98vh; 
     }
 }

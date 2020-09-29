@@ -1,5 +1,5 @@
 import React from 'react'
-import "../Chat.css"
+import "../styles/Chat.css"
 import { Avatar, IconButton } from '@material-ui/core';
 import { SearchOutlined, AttachFile, MoreVert } from '@material-ui/icons';
 import InsertEmoticonIcon from "@material-ui/icons/InsertEmoticon";
